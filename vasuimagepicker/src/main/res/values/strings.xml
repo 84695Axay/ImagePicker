@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">GalleryApp</string>
+    <string name="ted_image_picker_album_all">All</string>
+    <string name="ted_image_picker_empty">Empty</string>
+    <string name="ted_image_picker_title">Select Image</string>
+    <string name="ted_image_picker_done">Done</string>
+    <string name="ted_image_picker_max_count">You can not add more</string>
+    <string name="ted_image_picker_min_count">You have to choice images</string>
+
+    <string name="imagepicker_action_ok">OK</string>
+    <string name="imagepicker_action_done">DONE</string>
+
+    <string name="imagepicker_title_folder">Gallery</string>
+    <string name="imagepicker_title_image">Galleries</string>
+
+    <string name="imagepicker_text_gif">GIF</string>
+
+    <string name="imagepicker_error_no_camera">No camera found</string>
+    <string name="imagepicker_error_images_not_exist">Images not exist</string>
+    <string name="imagepicker_error_unknown">Unknown error</string>
+
+    <string name="imagepicker_msg_no_images">No images</string>
+    <string name="imagepicker_msg_no_write_external_storage_permission">To continue, please give access to your photos</string>
+    <string name="imagepicker_msg_limit_images">Limit selection to %d images</string>
+    <string name="toast_unexpected_error">Something Went Wrong.</string>
+</resources>
