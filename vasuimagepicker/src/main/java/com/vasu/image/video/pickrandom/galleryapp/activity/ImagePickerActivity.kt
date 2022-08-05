@@ -1,33 +1,33 @@
 package com.vasu.image.video.pickrandom.galleryapp.activity
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.drawable.Animatable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.*
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.vasu.image.video.pickrandom.galleryapp.R
 import com.vasu.image.video.pickrandom.galleryapp.adapter.AlbumAdapter
 import com.vasu.image.video.pickrandom.galleryapp.adapter.ImageAdapter
+import com.vasu.image.video.pickrandom.galleryapp.databinding.ActivityImagePickerBinding
 import com.vasu.image.video.pickrandom.galleryapp.helper.Constant
 import com.vasu.image.video.pickrandom.galleryapp.model.Album
 import com.vasu.image.video.pickrandom.galleryapp.model.Config
@@ -36,24 +36,17 @@ import gun0912.tedimagepicker.builder.type.MediaType
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_image_picker.*
-import java.io.File
-import java.util.*
 
 class ImagePickerActivity : AppCompatActivity() {
 
     //Album Activity
     private lateinit var disposable: Disposable
     private lateinit var albumAdapter: AlbumAdapter
-    private lateinit var mRVAlbum: RecyclerView
-    private lateinit var mPBAlbum: ProgressBar
     private lateinit var mAlbumList: List<Album>
     private var config: Config? = null
 
     //Image Activity
     private lateinit var mImageAdapter: ImageAdapter
-    private lateinit var mRVImage: RecyclerView
-    private lateinit var mImageList: List<Album>
     private lateinit var path: Uri
 
     //Ucrop Fragment
@@ -70,7 +63,8 @@ class ImagePickerActivity : AppCompatActivity() {
     private var croptoolbar: Toolbar? = null
     private var mShowLoader = false
 
-    private var dialog: AlertDialog ?= null
+    private var dialog: AlertDialog? = null
+    var activityImagePickerBinding: ActivityImagePickerBinding? = null
 
     companion object {
         const val EXTRA_SELECTED_URI = "EXTRA_SELECTED_URI"
@@ -78,12 +72,101 @@ class ImagePickerActivity : AppCompatActivity() {
         private const val SAMPLE_CROPPED_IMAGE_NAME = "SampleCropImage.jpg"
     }
 
+    fun checkForPermission(): Boolean = run {
+        return ContextCompat.checkSelfPermission(
+            this, Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ),
+            1001
+        )
+    }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_image_picker)
-        setStatusBarColor()
-        initView()
+        activityImagePickerBinding = ActivityImagePickerBinding.inflate(LayoutInflater.from(this))
+        setContentView(activityImagePickerBinding!!.root)
+        if (checkForPermission()) {
+            activityImagePickerBinding!!.imgNoFound.visibility = View.GONE
+            activityImagePickerBinding!!.pbAlbum.visibility = View.GONE
+            initView()
+        } else {
+            activityImagePickerBinding!!.pbAlbum.visibility = View.GONE
+            activityImagePickerBinding!!.imgNoFound.visibility = View.VISIBLE
+            activityImagePickerBinding!!.imgNoFound.setOnClickListener {
+                requestPermissions()
+            }
+        }
+
+    }
+
+    fun startInstalledAppDetailsActivity(context: Activity?) {
+        if (context == null) {
+            return
+        }
+        val i = Intent()
+        i.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        i.addCategory(Intent.CATEGORY_DEFAULT)
+        i.data = Uri.parse("package:" + context.packageName)
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+        i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+        context.startActivity(i)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            1001 -> {
+                if (grantResults.isNotEmpty()) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            initView()
+                        }, 200)
+                    } else {
+                        val showRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                            this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        )
+                        if (!showRationale) {
+                            val builder = android.app.AlertDialog.Builder(this)
+                            builder.setTitle("Permission Required")
+                            builder.setMessage("Storage Permission are required to save Image into External Storage")
+                            builder.setPositiveButton("OK") { dialog, _ ->
+                                dialog.dismiss()
+                                startInstalledAppDetailsActivity(this@ImagePickerActivity)
+                            }
+                            builder.setNegativeButton("Cancel") { dialog, which -> dialog.dismiss() }
+                            builder.create().show()
+                        }
+                    }
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    private fun initView() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setStatusBarColor()
+        }
+        activityImagePickerBinding!!.pbAlbum.visibility = View.VISIBLE
+        activityImagePickerBinding!!.imgNoFound.visibility = View.GONE
         Constant.lastSelectedPosition = -1
         config = intent.getParcelableExtra(Config.EXTRA_CONFIG)
         if (config!!.isKeepScreenOn) {
@@ -93,77 +176,43 @@ class ImagePickerActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.statusBarColor = config!!.statusBarColor
         }
-        mPBAlbum.indeterminateTintList = ColorStateList.valueOf(config!!.progressBarColor)
-        toolbar.setBackgroundColor(config!!.toolbarColor)
-        toolbarTitle.setTextColor(config!!.toolbarTextColor)
-        toolbarTitle.text = config!!.folderTitle
-        imgBack.setColorFilter(config!!.toolbarIconColor)
-        mainConstraint.setBackgroundColor(config!!.backgroundColor)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            activityImagePickerBinding!!.pbAlbum.indeterminateTintList =
+                ColorStateList.valueOf(config!!.progressBarColor)
+        }
+        activityImagePickerBinding!!.toolbar.setBackgroundColor(config!!.toolbarColor)
+        activityImagePickerBinding!!.toolbarTitle.setTextColor(config!!.toolbarTextColor)
+        activityImagePickerBinding!!.toolbarTitle.text = config!!.folderTitle
+        activityImagePickerBinding!!.imgBack.setColorFilter(config!!.toolbarIconColor)
+        activityImagePickerBinding!!.mainConstraint.setBackgroundColor(config!!.backgroundColor)
 
-        toolbarImage.setBackgroundColor(config!!.toolbarColor)
-        imgBackImage.setColorFilter(config!!.toolbarIconColor)
-        imgDoneImage.setColorFilter(config!!.toolbarIconColor)
-        txtFolderName.setTextColor(config!!.toolbarTextColor)
+        activityImagePickerBinding!!.toolbarImage.setBackgroundColor(config!!.toolbarColor)
+        activityImagePickerBinding!!.imgBackImage.setColorFilter(config!!.toolbarIconColor)
+        activityImagePickerBinding!!.imgDoneImage.setColorFilter(config!!.toolbarIconColor)
+        activityImagePickerBinding!!.txtFolderName.setTextColor(config!!.toolbarTextColor)
 
 
         try {
             loadMedia(true)
-        } catch (e: Exception) { }
+        } catch (e: Exception) {
+        }
         mAlbumList = arrayListOf()
 
-        imgBack.setOnClickListener {
+        activityImagePickerBinding!!.imgBack.setOnClickListener {
             onBackPressed()
         }
 
-        imgBackImage.setOnClickListener {
+        activityImagePickerBinding!!.imgBackImage.setOnClickListener {
             onBackPressed()
         }
 
-        imgDoneImage.setOnClickListener {
+        activityImagePickerBinding!!.imgDoneImage.setOnClickListener {
             val uri = path
-            var data: Intent? = null
-            data = Intent(
-                this@ImagePickerActivity,
-                Class.forName("com.cool.stylish.text.art.fancy.color.creator.activitys.EditAnimationActivity")
-            )
+            val data: Intent = Intent()
             data.putExtra(EXTRA_SELECTED_URI, uri.toString())
-            startActivity(data)
+            setResult(-1, data)
+            finish()
         }
-    }
-
-    private fun setupAppBar() {
-        croptoolbar = findViewById(R.id.croptoolbarAlbum)
-
-        // Set Toolbar Color
-        croptoolbar!!.setBackgroundColor(config!!.toolbarColor)
-        croptoolbar!!.setTitleTextColor(config!!.toolbarTextColor)
-        croptoolbar!!.visibility = View.VISIBLE
-
-        toolbarImage.visibility = View.GONE
-        mRVImage.visibility = View.GONE
-
-
-        val cropToolBarTitle = croptoolbar!!.findViewById<TextView>(R.id.toolbar_title)!!
-        cropToolBarTitle.setTextColor(config!!.toolbarTextColor)
-        cropToolBarTitle.text = mToolbarTitle
-
-        // Color Toolbar Icons
-        val stateButtonDrawable = ContextCompat.getDrawable(baseContext, mToolbarCancelDrawable)
-        if (stateButtonDrawable != null) {
-            stateButtonDrawable.mutate()
-            stateButtonDrawable.setColorFilter(config!!.toolbarIconColor, PorterDuff.Mode.SRC_ATOP)
-            croptoolbar!!.navigationIcon = stateButtonDrawable
-        }
-        setSupportActionBar(croptoolbar)
-        val actionBar = supportActionBar
-        actionBar?.setDisplayShowTitleEnabled(false)
-    }
-
-
-    private fun initView() {
-        mRVAlbum = findViewById(R.id.rv_album)
-        mRVImage = findViewById(R.id.rv_image)
-        mPBAlbum = findViewById(R.id.pb_album)
     }
 
     private fun loadMedia(isRefresh: Boolean = false) {
@@ -189,8 +238,8 @@ class ImagePickerActivity : AppCompatActivity() {
                             folderName: String
                         ) {
                             setImageAdapter(position, folderName)
-                            toolbarImage.visibility = View.VISIBLE
-                            txtFolderName.text = folderName
+                            activityImagePickerBinding!!.toolbarImage.visibility = View.VISIBLE
+                            activityImagePickerBinding!!.txtFolderName.text = folderName
 
 //                            var intent = Intent(this@AlbumActivity, ImageActivity::class.java)
 //                            intent.putExtra("position", position)
@@ -200,19 +249,19 @@ class ImagePickerActivity : AppCompatActivity() {
                         }
 
                     })
-                mPBAlbum.visibility = View.GONE
-                mRVAlbum.visibility = View.VISIBLE
-                mRVAlbum.layoutManager = layoutManager
-                mRVAlbum.adapter = albumAdapter
+                activityImagePickerBinding!!.pbAlbum.visibility = View.GONE
+                activityImagePickerBinding!!.rvAlbum.visibility = View.VISIBLE
+                activityImagePickerBinding!!.rvAlbum.layoutManager = layoutManager
+                activityImagePickerBinding!!.rvAlbum.adapter = albumAdapter
 
             }
     }
 
     override fun onBackPressed() {
-        when {
-            mRVImage.visibility == View.VISIBLE -> {
+        when (activityImagePickerBinding!!.rvImage.visibility) {
+            View.VISIBLE -> {
                 showImage(false)
-                imgDoneImage.visibility = View.GONE
+                activityImagePickerBinding!!.imgDoneImage.visibility = View.INVISIBLE
                 Constant.lastSelectedPosition = -1
             }
             else -> {
@@ -222,8 +271,8 @@ class ImagePickerActivity : AppCompatActivity() {
     }
 
     private fun setImageAdapter(position: Int, folderName: String) {
-        toolbarImage.visibility = View.VISIBLE
-        txtFolderName.text = folderName
+        activityImagePickerBinding!!.toolbarImage.visibility = View.VISIBLE
+        activityImagePickerBinding!!.txtFolderName.text = folderName
 
         showImage(true)
         var layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
@@ -234,10 +283,10 @@ class ImagePickerActivity : AppCompatActivity() {
             object : ImageAdapter.OnImageClick {
                 override fun selectMedia(uri: Uri) {
                     if (uri.toString().isNotEmpty()) {
-                        imgDoneImage.visibility = View.VISIBLE
+                        activityImagePickerBinding!!.imgDoneImage.visibility = View.VISIBLE
                         path = uri
                     } else {
-                        imgDoneImage.visibility = View.INVISIBLE
+                        activityImagePickerBinding!!.imgDoneImage.visibility = View.INVISIBLE
                         Toast.makeText(
                             this@ImagePickerActivity,
                             "Please Select Image",
@@ -251,30 +300,22 @@ class ImagePickerActivity : AppCompatActivity() {
                 }
 
             })
-        mRVImage.layoutManager = layoutManager
-        mRVImage.adapter = mImageAdapter
+        activityImagePickerBinding!!.rvImage.layoutManager = layoutManager
+        activityImagePickerBinding!!.rvImage.adapter = mImageAdapter
     }
 
     private fun showImage(b: Boolean) {
         if (b) {
-            mRVAlbum.visibility = View.GONE
-            toolbar.visibility = View.GONE
-            mRVImage.visibility = View.VISIBLE
-            toolbarImage.visibility = View.VISIBLE
+            activityImagePickerBinding!!.rvAlbum.visibility = View.GONE
+            activityImagePickerBinding!!.toolbar.visibility = View.GONE
+            activityImagePickerBinding!!.rvImage.visibility = View.VISIBLE
+            activityImagePickerBinding!!.toolbarImage.visibility = View.VISIBLE
         } else {
-            mRVAlbum.visibility = View.VISIBLE
-            toolbar.visibility = View.VISIBLE
-            mRVImage.visibility = View.GONE
-            toolbarImage.visibility = View.GONE
+            activityImagePickerBinding!!.rvAlbum.visibility = View.VISIBLE
+            activityImagePickerBinding!!.toolbar.visibility = View.VISIBLE
+            activityImagePickerBinding!!.rvImage.visibility = View.GONE
+            activityImagePickerBinding!!.toolbarImage.visibility = View.GONE
         }
-    }
-
-    private fun removeFragmentFromScreen() {
-        try {
-            croptoolbar!!.visibility = View.GONE
-            toolbarImage.visibility = View.VISIBLE
-            mRVImage.visibility = View.VISIBLE
-        } catch (e: Exception) { }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -300,7 +341,7 @@ class ImagePickerActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 //        Toast.makeText(this@ImagePickerActivity, "pause", Toast.LENGTH_SHORT).show()
-        if (dialog!=null && dialog!!.isShowing){
+        if (dialog != null && dialog!!.isShowing) {
             dialog!!.dismiss()
         }
     }
@@ -308,7 +349,7 @@ class ImagePickerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 //        Toast.makeText(this@ImagePickerActivity, "resume", Toast.LENGTH_SHORT).show()
-        if (dialog!=null && dialog!!.isShowing){
+        if (dialog != null && dialog!!.isShowing) {
             dialog!!.dismiss()
         }
     }

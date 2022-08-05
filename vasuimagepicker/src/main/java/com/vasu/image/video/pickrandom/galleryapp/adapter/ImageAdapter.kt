@@ -51,13 +51,14 @@ class ImageAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, @SuppressLint("RecyclerView") position: Int) {
-        holder.setIsRecyclable(false)
+      //  holder.setIsRecyclable(false)
 
         if (Constant.lastSelectedPosition == position) {
             holder.mSelectImage.visibility = View.VISIBLE
         } else {
             holder.mSelectImage.visibility = View.INVISIBLE
         }
+
         Glide.with(mContext).asBitmap().load(mediaUris[position].uri).addListener(object :
             RequestListener<Bitmap?> {
             override fun onLoadFailed(

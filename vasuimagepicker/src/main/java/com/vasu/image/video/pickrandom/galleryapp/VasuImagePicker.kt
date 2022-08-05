@@ -29,8 +29,7 @@ open class VasuImagePicker {
 
         override val intent: Intent
             get() {
-                val intent: Intent
-                intent = Intent(activity, ImagePickerActivity::class.java)
+                val intent: Intent = Intent(activity, ImagePickerActivity::class.java)
                 intent.putExtra(Config.EXTRA_CONFIG, config)
                 return intent
             }
@@ -125,12 +124,6 @@ open class VasuImagePicker {
             config.isKeepScreenOn = keepScreenOn
             return this
         }
-
-//        fun setSelectedImages(selectedImages: ArrayList<Image?>?): Builder {
-//            config.setSelectedImages(selectedImages)
-//            return this
-//        }
-
         fun setRequestCode(requestCode: Int): Builder {
             config.requestCode = requestCode
             return this
@@ -155,7 +148,6 @@ open class VasuImagePicker {
             config.savePath = SavePath.DEFAULT
             config.isAlwaysShowDoneButton = false
             config.isKeepScreenOn = false
-//            config.setSelectedImages(ArrayList<Image>())
         }
     }
 }

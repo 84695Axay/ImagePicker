@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="1108dp"
     android:layout_gravity="center"
-    android:background="@color/black"
-    tools:context=".MainActivity">
+    android:background="@color/black">
 
     <View
         android:id="@+id/rectangle_6"

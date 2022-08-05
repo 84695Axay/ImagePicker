@@ -1,43 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.vasu.image.video.pickrandom.galleryapp.util.SquareFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="@dimen/_2sdp">
+    android:layout_margin="@dimen/_5sdp"
+    android:layout_height="wrap_content">
 
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:cardBackgroundColor="@color/txt_dark_gray"
+        app:cardElevation="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:cardCornerRadius="@dimen/_5sdp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <ImageView
-        android:id="@+id/ivThumbImage"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:background="@drawable/place_holder_photo"
-        android:visibility="visible" />
+        <ImageView
+            android:id="@+id/ivThumbImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/place_holder_photo"
+            android:scaleType="centerCrop"
+            android:visibility="visible" />
 
-    <LinearLayout
-        android:id="@+id/frameLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/linear_alpha_50"
-        android:orientation="vertical"
-        android:padding="4dp"
-        android:visibility="visible"
-        android:layout_gravity="bottom">
-
-        <TextView
-            android:id="@+id/txtAlbumName"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/frameLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/txt_white" />
+            android:layout_gravity="bottom"
+            android:background="@color/linear_alpha_50"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:visibility="visible">
 
-        <TextView
-            android:id="@+id/txtCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/txtAlbumName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/txt_white" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/txtCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white" />
 
-</com.vasu.image.video.pickrandom.galleryapp.util.SquareFrameLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
