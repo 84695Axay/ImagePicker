@@ -60,7 +60,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.0'
 
     implementation 'com.google.android.gms:play-services-ads:21.1.0'
-
+    implementation project(path: ':vasuimagepicker')
     implementation 'com.facebook.android:audience-network-sdk:6.11.0'
     implementation 'com.google.ads.mediation:facebook:6.11.0.0'
     implementation 'com.facebook.android:facebook-android-sdk:9.0.0'
