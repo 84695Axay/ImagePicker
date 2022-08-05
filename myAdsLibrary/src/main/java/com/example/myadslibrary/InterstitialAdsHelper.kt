@@ -1,4 +1,4 @@
-package com.example.jetpackdemo
+package com.example.myadslibrary
 
 import android.app.Activity
 import android.content.Context
@@ -48,7 +48,7 @@ class InterstitialAdsHelper {
     }
 
 
-     fun loadRewardedInterstitialAd(context: Activity) {
+     fun loadRewardedInterstitialAd(context: Activity,var string: String) {
         if (rewardedInterstitialAd == null && !isLoadingAds) {
             val adRequest = AdRequest.Builder().build()
 

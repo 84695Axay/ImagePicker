@@ -32,9 +32,6 @@ import com.vasu.image.video.pickrandom.galleryapp.helper.Constant
 import com.vasu.image.video.pickrandom.galleryapp.model.Album
 import com.vasu.image.video.pickrandom.galleryapp.model.Config
 import com.vasu.image.video.pickrandom.galleryapp.util.GalleryUtil
-import com.yalantis.ucrop.UCrop
-import com.yalantis.ucrop.UCropFragment
-import com.yalantis.ucrop.UCropFragmentCallback
 import gun0912.tedimagepicker.builder.type.MediaType
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -43,7 +40,7 @@ import kotlinx.android.synthetic.main.activity_image_picker.*
 import java.io.File
 import java.util.*
 
-class ImagePickerActivity : AppCompatActivity(), UCropFragmentCallback {
+class ImagePickerActivity : AppCompatActivity() {
 
     //Album Activity
     private lateinit var disposable: Disposable
@@ -60,13 +57,10 @@ class ImagePickerActivity : AppCompatActivity(), UCropFragmentCallback {
     private lateinit var path: Uri
 
     //Ucrop Fragment
-    private var uCropFragment: UCropFragment? = null
-    private var position = 0
     private var mToolbarColor = 0
     private var mStatusBarColor = 0
     private var mToolbarWidgetColor = 0
     private var mToolbarTitle: String? = null
-    private var isCropViewOpen = false
 
     @DrawableRes
     private var mToolbarCancelDrawable = 0
@@ -127,39 +121,14 @@ class ImagePickerActivity : AppCompatActivity(), UCropFragmentCallback {
 
         imgDoneImage.setOnClickListener {
             val uri = path
-            finishPickImages(uri)
+            var data: Intent? = null
+            data = Intent(
+                this@ImagePickerActivity,
+                Class.forName("com.cool.stylish.text.art.fancy.color.creator.activitys.EditAnimationActivity")
+            )
+            data.putExtra(EXTRA_SELECTED_URI, uri.toString())
+            startActivity(data)
         }
-    }
-
-    private fun startCrop(uri: Uri) {
-        val c = Calendar.getInstance()
-        val name = c.timeInMillis.toString() + SAMPLE_CROPPED_IMAGE_NAME
-        val uCrop = UCrop.of(uri, Uri.fromFile(File(cacheDir, name)))
-        val options = UCrop.Options()
-        options.setFreeStyleCropEnabled(false)
-        options.setRootViewBackgroundColor(resources.getColor(R.color.white))
-        options.setActiveWidgetColor(resources.getColor(R.color.black))
-        options.setCropFrameColor(resources.getColor(R.color.black))
-        uCrop.withOptions(options)
-        setupFragment(uCrop)
-    }
-
-    private fun setupFragment(uCrop: UCrop) {
-        uCropFragment = uCrop.getFragment(uCrop.getIntent(this).extras)
-        supportFragmentManager.beginTransaction()
-            .add(R.id.fragmentContainer, uCropFragment!!, UCropFragment.TAG)
-            .commitAllowingStateLoss()
-        setupViews(uCrop.getIntent(this).extras)
-    }
-
-    private fun setupViews(extras: Bundle?) {
-        mStatusBarColor = config!!.statusBarColor
-        mToolbarColor = config!!.toolbarColor
-        mToolbarCancelDrawable = R.drawable.ic_close_
-        mToolbarCropDrawable = R.drawable.ic_selected
-        mToolbarWidgetColor = ContextCompat.getColor(this@ImagePickerActivity, R.color.black)
-        mToolbarTitle = "Crop Image"
-        setupAppBar()
     }
 
     private fun setupAppBar() {
@@ -241,9 +210,6 @@ class ImagePickerActivity : AppCompatActivity(), UCropFragmentCallback {
 
     override fun onBackPressed() {
         when {
-            isCropViewOpen -> {
-                removeFragmentFromScreen()
-            }
             mRVImage.visibility == View.VISIBLE -> {
                 showImage(false)
                 imgDoneImage.visibility = View.GONE
@@ -303,136 +269,12 @@ class ImagePickerActivity : AppCompatActivity(), UCropFragmentCallback {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.ucrop_menu_activity, menu)
-
-        val menuItemLoader = menu.findItem(R.id.menu_loader)
-        val menuItemLoaderIcon = menuItemLoader.icon
-        if (menuItemLoaderIcon != null) {
-            try {
-                menuItemLoaderIcon.mutate()
-                menuItemLoaderIcon.setColorFilter(
-                    config!!.toolbarIconColor,
-                    PorterDuff.Mode.SRC_ATOP
-                )
-                menuItemLoader.icon = menuItemLoaderIcon
-            } catch (e: IllegalStateException) {
-                Log.i(
-                    this.javaClass.name,
-                    String.format(
-                        "%s - %s",
-                        e.message,
-                        getString(R.string.ucrop_mutate_exception_hint)
-                    )
-                )
-            } catch (e: Exception) {
-
-            }
-            (menuItemLoader.icon as Animatable).start()
-        }
-        val menuItemCrop = menu.findItem(R.id.menu_crop)
-        val menuItemCropIcon = ContextCompat.getDrawable(
-            this,
-            if (mToolbarCropDrawable == 0) R.drawable.ic_selected else mToolbarCropDrawable
-        )
-        if (menuItemCropIcon != null) {
-            menuItemCropIcon.mutate()
-            menuItemCropIcon.setColorFilter(config!!.toolbarIconColor, PorterDuff.Mode.SRC_ATOP)
-            menuItemCrop.icon = menuItemCropIcon
-        }
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.menu_crop).isVisible = !mShowLoader
-        menu.findItem(R.id.menu_loader).isVisible = mShowLoader
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_crop) {
-            if (uCropFragment != null && uCropFragment!!.isAdded) uCropFragment!!.cropAndSaveImage()
-        } else if (item.itemId == android.R.id.home) {
-            removeFragmentFromScreen()
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    override fun loadingProgress(showLoader: Boolean) {
-        mShowLoader = showLoader
-        supportInvalidateOptionsMenu()
-    }
-
-    override fun onCropFinish(result: UCropFragment.UCropResult) {
-        if (result.mResultData != null) {
-            when (result.mResultCode) {
-                Activity.RESULT_OK -> handleCropResult(result.mResultData)
-                UCrop.RESULT_ERROR -> handleCropError(result.mResultData)
-            }
-        }
-    }
-
-    private fun handleCropError(mResultData: Intent) {
-        val cropError = UCrop.getError(mResultData)
-        if (cropError != null) {
-            Toast.makeText(this@ImagePickerActivity, cropError.message, Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(this@ImagePickerActivity, R.string.toast_unexpected_error, Toast.LENGTH_SHORT).show()
-        }
-        removeFragmentFromScreen()
-    }
-
     private fun removeFragmentFromScreen() {
         try {
-            isCropViewOpen = false
-            supportFragmentManager.beginTransaction()
-                .remove(uCropFragment!!)
-                .commitAllowingStateLoss()
             croptoolbar!!.visibility = View.GONE
             toolbarImage.visibility = View.VISIBLE
             mRVImage.visibility = View.VISIBLE
         } catch (e: Exception) { }
-    }
-
-    private fun handleCropResult(mResultData: Intent) {
-        val resultUri = UCrop.getOutput(mResultData)
-        try {
-            if (config!!.requestCode == 101) {
-                var data: Intent? = null
-                data = Intent(
-                    this@ImagePickerActivity,
-                    Class.forName("com.cool.stylish.text.art.fancy.color.creator.activitys.EditAnimationActivity")
-                )
-                data.putExtra(EXTRA_SELECTED_URI, resultUri.toString())
-                startActivity(data)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    removeFragmentFromScreen()
-                }, 500)
-
-            }else if (config!!.requestCode == 102){
-                val data = intent
-                data.putExtra(EXTRA_SELECTED_URI, resultUri.toString())
-                Log.d(TAG, "onCreate: $resultUri")
-                setResult(RESULT_OK, data)
-                finish()
-            }
-            else{
-                Toast.makeText(this, "Check Request Code", Toast.LENGTH_SHORT).show()
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun finishPickImages(uri: Uri) {
-        isCropViewOpen = true
-        if (config!!.requestCode == 101) {
-            startCrop(uri)
-        } else if (config!!.requestCode == 102) {
-            startCrop(uri)
-        }
-
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

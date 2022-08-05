@@ -1,2 +1,3 @@
 rootProject.name = "JetPackDemo"
 include ':app'
+include ':vasuimagepicker'
