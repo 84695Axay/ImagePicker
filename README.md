@@ -17,7 +17,7 @@ Step 2. Add the dependency
 	        implementation 'com.github.84695Axay:JetPackDemo:Tag'
 	}
 
-The ImagePicker configuration is created using the builder pattern.
+Step 3. The ImagePicker configuration is created using the builder pattern.
 
 Kotlin
 
