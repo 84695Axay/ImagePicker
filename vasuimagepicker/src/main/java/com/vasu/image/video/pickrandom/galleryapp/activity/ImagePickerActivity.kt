@@ -265,7 +265,7 @@ class ImagePickerActivity : AppCompatActivity() {
                 Constant.lastSelectedPosition = -1
             }
             else -> {
-                super.onBackPressed()
+               finish()
             }
         }
     }

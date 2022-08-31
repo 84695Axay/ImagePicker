@@ -1,4 +1,4 @@
-package com.example.jetpackdemo;
+package com.example.mygallerypicker;
 
 import android.app.Application;
 public class YourApplication extends Application {

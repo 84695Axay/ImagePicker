@@ -1,11 +1,3 @@
 <resources>
     <string name="app_name">JetPackDemo</string>
-    <string name="yashay">yashay</string>
-    <string name="ways_to_cal">WAYS TO CALM DOWN</string>
-    <string name="your_nerves">YOUR NERVES</string>
-    <string name="before_pres">BEFORE PRESENTATION</string>
-    <string name="come_early_">"Come early so yo can\nprepare yourself better."</string>
-    <string name="take_deep_b">Take deep breaths\na couple of times.</string>
-    <string name="make_your_h">Make your heartbeat stable\nby listen to calming music.</string>
-    <string name="know_inside">Know inside out about the material\nand practice since day before.</string>
 </resources>

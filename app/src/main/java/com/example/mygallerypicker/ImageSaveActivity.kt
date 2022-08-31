@@ -1,4 +1,4 @@
-package com.example.jetpackdemo
+package com.example.mygallerypicker
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,15 +10,13 @@ import com.example.jetpackdemo.databinding.ImageSaveBinding
 import com.vasu.image.video.pickrandom.galleryapp.VasuImagePicker
 
 class ImageSaveActivity : AppCompatActivity() {
-
     var imageSaveBin: ImageSaveBinding? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imageSaveBin = ImageSaveBinding.inflate(LayoutInflater.from(this))
         setContentView(imageSaveBin!!.root)
 
-        imageSaveBin!!.imgGallery.setOnClickListener{
+        imageSaveBin!!.imgGallery.setOnClickListener {
             VasuImagePicker.ActivityBuilder(this)
                 .setFolderMode(true)
                 .setFolderTitle("Gallery")
@@ -42,7 +40,8 @@ class ImageSaveActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1010 && resultCode == -1) {
-            Glide.with(this).load(data!!.getStringExtra("EXTRA_SELECTED_URI")).into(imageSaveBin!!.imgGallery)
+            Glide.with(this).load(data!!.getStringExtra("EXTRA_SELECTED_URI"))
+                .into(imageSaveBin!!.imgGallery)
         }
     }
 }
