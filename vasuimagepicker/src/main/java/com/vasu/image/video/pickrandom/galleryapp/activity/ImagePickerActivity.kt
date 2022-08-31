@@ -191,7 +191,6 @@ class ImagePickerActivity : AppCompatActivity() {
         activityImagePickerBinding!!.imgDoneImage.setColorFilter(config!!.toolbarIconColor)
         activityImagePickerBinding!!.txtFolderName.setTextColor(config!!.toolbarTextColor)
 
-
         try {
             loadMedia(true)
         } catch (e: Exception) {
