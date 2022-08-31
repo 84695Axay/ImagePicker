@@ -1,2 +1,0 @@
-com/example/myadslibrary/BuildConfig.java
- com.example.myadslibrary.BuildConfig
